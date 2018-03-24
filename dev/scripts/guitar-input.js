@@ -3,13 +3,22 @@ import React from 'react';
 export class GuitarInput extends React.Component{
     constructor(props){
         super(props);
+        this.state = {
+            strings : []
+        }
+
+        for(let i = 0; i < this.props.stringTunings.length; i++){
+            this.state.strings[i] = 'x';
+        }
+
+        this.setCurrentlySelectedFret = this.setCurrentlySelectedFret.bind(this);
     }
 
     render(){
         return (
-            <div>
+            <div className = "guitar-input-container">
                 <div className="tab-input-container">
-                    {this.renderTabInput()}            
+                    {/* {this.renderTabInput()}             */}
                 </div>
                 <div className = "guitar-container">
                     {this.renderStrings()}
@@ -23,8 +32,12 @@ export class GuitarInput extends React.Component{
         for(let i = 0; i < this.props.stringTunings.length; i++){
             strings.push(
                 <GuitarString 
-                    numFrets = {24} 
+                    numFrets = {24}
+                    stringId = {i}
+                    key = {i}
                     stringTuning = {this.props.stringTunings[i]}
+                    currentlySelectedFret = {this.state.strings[i]}
+                    setCurrentlySelectedFret = {this.setCurrentlySelectedFret}
                 />
             )
         }
@@ -34,25 +47,43 @@ export class GuitarInput extends React.Component{
     renderTabInput(){
         let tabInputs = [];
         for(let i = 0; i < this.props.stringTunings.length; i++){
-            tabInputs.push();
-        }
-        
+            tabInputs.push(
+                <input value = {this.state.strings[i]} size = {2} maxLength = {2} type = "text"/>
+            );
+        } 
+        return tabInputs;
     }
+
+    setCurrentlySelectedFret(stringId,fret){
+        let currentStrings = this.state.strings.slice();
+        currentStrings[stringId] = fret;
+        this.setState({strings : currentStrings},()=>{
+            this.props.notify(this.state.strings);
+        });     
+    }
+
+
+
+
 }
 
 export class GuitarString extends React.Component{
     constructor(props){
         super(props);
-        this.state = {
-            currentlySelectedFret : null
-        }
         this.setCurrentlySelectedFret = this.setCurrentlySelectedFret.bind(this);
         this.handleButton = this.handleButton.bind(this);
+        this.handleTabInput = this.handleTabInput.bind(this);
+    }
+
+    shouldComponentUpdate(nextProps,nextState){
+        console.log(this.props.currentlySelectedFret !== nextProps.currentlySelectedFret);
+        return this.props.currentlySelectedFret !== nextProps.currentlySelectedFret;
     }
 
     render(){
         return (
             <div className = "string-container">
+            <input onChange = {this.handleTabInput} value = {this.props.currentlySelectedFret} size = {2} maxLength = {2} type = "text"/>
             <button 
                 className = "mute-toggle-button"
                 onClick = {this.handleButton}
@@ -66,14 +97,14 @@ export class GuitarString extends React.Component{
 
     renderFrets(){
         let frets = [];
-        for(let i = 0; i < this.props.numFrets; i++){
-            //let d = 1 - (1 / (Math.pow(2, (n / 12))));
+        for(let i = 1; i <= this.props.numFrets; i++){
             frets.push(
                 <Fret 
                     fretNumber = {i} 
+                    key = {i}
                     stringTuning = {this.props.stringTuning} 
-                    isSelected = {this.state.currentlySelectedFret === i}
-                    notifyString = {() => {this.setCurrentlySelectedFret(i)}}
+                    isSelected = {this.props.currentlySelectedFret === i}
+                    notifyString = {() => {this.props.setCurrentlySelectedFret(this.props.stringId,i)}}
                 />
             )
         }
@@ -81,18 +112,49 @@ export class GuitarString extends React.Component{
     }
 
     setCurrentlySelectedFret(f){
-        console.log(f);
         this.setState({currentlySelectedFret : f});
     }
 
+    handleTabInput(e){
+        let val = e.target.value;
+
+        if(val.toLowerCase() === "x"){
+            this.props.setCurrentlySelectedFret(this.props.stringId, "x");
+        }
+        else if (val.toLowerCase() === "o" || parseInt(val) === 0){
+            this.props.setCurrentlySelectedFret(this.props.stringId, 0);
+        }
+
+        else if(typeof parseInt(val) === 'number'){
+
+            if(isNaN(parseInt(val))){
+                this.props.setCurrentlySelectedFret(this.props.stringId, null);
+            }
+            else{
+                let mval = parseInt(val);
+                if(mval < 1){
+                    mval = 1;
+                }
+                else if(mval > 24){
+                    mval = 24;
+                }
+                this.props.setCurrentlySelectedFret(this.props.stringId, mval);
+            }
+        }
+
+        else{
+            this.props.setCurrentlySelectedFret(this.props.stringId, null);
+        }
+    }
+
     displayToggleButtonText(){
-        switch(this.state.currentlySelectedFret){
-            case 'open':
-                return 'O';
+        switch(this.props.currentlySelectedFret){
+            case 0:
+                return 'o';
             break;
 
-            case 'muted' :
-                return 'X';
+            case 'x' :
+                return 'x';
             break;
 
             default:
@@ -102,21 +164,20 @@ export class GuitarString extends React.Component{
     }
 
     handleButton(){
-        switch(this.state.currentlySelectedFret){
-            case 'open':
-                this.setState({currentlySelectedFret : 'muted'});
+        switch(this.props.currentlySelectedFret){
+            case 0:
+               this.props.setCurrentlySelectedFret(this.props.stringId,'x');
             break;
 
-            case 'muted':
-                this.setState({currentlySelectedFret : 'open'});
+            case 'x':
+               this.props.setCurrentlySelectedFret(this.props.stringId,0);
             break;
 
             default :
-                this.setState({currentlySelectedFret : 'open'});
+              this.props.setCurrentlySelectedFret(this.props.stringId,0);
             break;
 
         }
-
     }
 }
 
@@ -124,7 +185,6 @@ export class Fret extends React.Component{
     constructor(props){
         super(props);
         this.state = {
-            isSelected : false,
             isMousedOver : false
         }
 
@@ -147,7 +207,6 @@ export class Fret extends React.Component{
     }
 
     handleMouseEnter(){
-        console.log("mouseOver");
         this.setState({isMousedOver : true})
     }
 
@@ -158,7 +217,6 @@ export class Fret extends React.Component{
     handleClick(e){
         this.setState({isSelected : true});
     }
-
 
 }
 

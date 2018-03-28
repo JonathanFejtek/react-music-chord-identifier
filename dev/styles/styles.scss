@@ -129,11 +129,17 @@ body{
 }
 
 .keyspace-container{
-    width : 50%;
+    width : calc(50% - 10px);
 }
 
 .chord-info-container{
     padding : 10px;
+    display : flex;
+    justify-content : space-between;
+}
+
+.chord-details{
+    width :calc(50% - 10px);
 }
 
 .parent-keys{
@@ -141,12 +147,29 @@ body{
     stroke : rgba(255, 3, 87, 1);
 }
 
+.notes-in-chord-list{
+    display : flex;
+    h3{
+        padding : 0 16px;
+        border-right : 1px solid black;
+    }
+}
+
+.tab-for-chord{
+    display : flex;
+    flex-flow : row;
+    h3{
+        padding : 0 16px;
+        border-right : 1px solid black;
+    }
+}
+
 @media (max-width : 810px){
     .guitar-container{
         display : flex;
         flex-flow : row-reverse;
         width : 100%;
-        justify-content : space-between;
+        justify-content : space-around;
     }
 
     .string-container{

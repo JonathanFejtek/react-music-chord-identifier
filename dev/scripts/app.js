@@ -22,7 +22,10 @@ class App extends React.Component {
         keyIndices : [],
         parentKeyTones : [],
         parentKeyNames : [],
-        stringTunings : ["E 4","B 3","G 3","D 3","A 2","E 2"]
+        stringTunings : ["E 4","B 3","G 3","D 3","A 2","E 2"],
+        currentTonesPlayed : [],
+        currentNotesPlayed : [],
+        currentFretState : []
       }
 
       this.state.keys = {};
@@ -35,6 +38,10 @@ class App extends React.Component {
       })
 
       this.identifyChord = this.identifyChord.bind(this);
+      this.getChordToneValues = this.getChordToneValues.bind(this);
+      this.getNotesInChord = this.getNotesInChord.bind(this);
+      this.getIntervalStructures = this.getIntervalStructures.bind(this);
+      //this.getNormalizedToneSet = this.getNormalizedToneSet.bind(this);
     }
 
     render() {
@@ -50,6 +57,22 @@ class App extends React.Component {
               </div>
               <div className="chord-details">
                 {/* <p>{this.state.parentKeyNames}</p> */}
+                <h2>Notes in Chord:</h2>
+                <div className="notes-in-chord-list">
+                  {this.state.currentNotesPlayed.map((note)=>{
+                    return (
+                      <h3>{note}</h3>
+                    );
+                  })}
+                </div>
+                <h2>Tab:</h2>
+                <div className="tab-for-chord">
+                  {this.state.currentFretState.map((fret)=>{
+                    return (
+                      <h3>{fret}</h3>
+                    );
+                  }).reverse()}
+                </div>
               </div>   
             </div>
           </div>
@@ -57,8 +80,7 @@ class App extends React.Component {
       )
     }
 
-    identifyChord(fretState){
-
+    getChordToneValues(fretState){      
       let tones = fretState.map((fretVal, i) => {
         if(typeof fretVal == 'number'){
           return NoteLookup.getToneForNoteName(this.state.stringTunings[i]) + fretVal
@@ -68,6 +90,52 @@ class App extends React.Component {
           return toneVal;
         }
       })
+
+      return tones;
+    }
+
+    getNotesInChord(chordTones){
+      let notes = [];
+      for(let tone of chordTones){
+        notes.push(NoteLookup.getNoteName(tone,true));
+      }
+      return notes;
+    }
+
+    getIntervalStructures(chordTones){
+      let intervalStructures = [];
+
+      for(let tone of chordTones){
+        let intervalStructure = {};
+        intervalStructure.root = tone;
+        intervalStructure.structure = [];
+
+        for(let otherTone of chordTones){
+          intervalStructure.structure.push((tone-otherTone)%12);
+        }
+
+        intervalStructures.push(intervalStructure);
+      }
+
+      return intervalStructures;
+    }
+
+    identifyChord(fretState){
+      console.log(fretState);
+
+      let tones = this.getChordToneValues(fretState);
+
+      console.log(tones);
+
+      let notes = this.getNotesInChord(tones);
+
+      let intervalStructures = this.getIntervalStructures(tones);
+
+      console.log(notes);
+
+      console.log(intervalStructures);
+
+      this.setState({currentNotesPlayed : notes, currentTonesPlayed : tones, currentFretState : fretState});
 
       let normalizedTones = [... new Set(tones.map((toneVal)=>{
         return (toneVal);

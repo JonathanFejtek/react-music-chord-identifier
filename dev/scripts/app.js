@@ -4,6 +4,7 @@ import {GuitarInput} from './guitar-input';
 import {KeySpaceView} from './key-space-view';
 import {NoteLookup} from './note-lookup';
 import {ModeLookup} from './modes-and-keys';
+import {ChordLookup} from './chord-lookup';
 
 
 function satisfiesKey(chordTones,keyTones){
@@ -24,8 +25,9 @@ class App extends React.Component {
         parentKeyNames : [],
         stringTunings : ["E 4","B 3","G 3","D 3","A 2","E 2"],
         currentTonesPlayed : [],
-        currentNotesPlayed : [],
-        currentFretState : []
+        currentNotesPlayed : ['x','x','x','x','x','x'],
+        currentFretState : ['x','x','x','x','x','x'],
+        validChords : []
       }
 
       this.state.keys = {};
@@ -41,13 +43,13 @@ class App extends React.Component {
       this.getChordToneValues = this.getChordToneValues.bind(this);
       this.getNotesInChord = this.getNotesInChord.bind(this);
       this.getIntervalStructures = this.getIntervalStructures.bind(this);
-      //this.getNormalizedToneSet = this.getNormalizedToneSet.bind(this);
     }
 
     render() {
       return (
         <div>
-          <div className="app-container">
+          <h2>Chord Explorer</h2>
+          <div className="app-container"> 
             <div className="fretboard-container">
               <GuitarInput notify = {this.identifyChord} stringTunings = {this.state.stringTunings}/>
             </div>
@@ -56,22 +58,33 @@ class App extends React.Component {
                 <KeySpaceView parentKeys = {this.state.parentKeyTones} keyIndices = {this.state.keyIndices} />
               </div>
               <div className="chord-details">
-                {/* <p>{this.state.parentKeyNames}</p> */}
-                <h2>Notes in Chord:</h2>
-                <div className="notes-in-chord-list">
-                  {this.state.currentNotesPlayed.map((note)=>{
-                    return (
-                      <h3>{note}</h3>
-                    );
-                  })}
+                <div className="chord-info-block">
+                  <h2>Notes in Chord</h2>
+                  <div className="chord-info-list">
+                    {this.state.currentNotesPlayed.map((note)=>{
+                      return (
+                        <h4>{note}</h4>
+                      );
+                    }).reverse()}
+                  </div>              
                 </div>
-                <h2>Tab:</h2>
-                <div className="tab-for-chord">
-                  {this.state.currentFretState.map((fret)=>{
+                <div className="chord-info-block">
+                  <h2>Tab</h2>
+                  <div className="chord-info-list">
+                    {this.state.currentFretState.map((fret)=>{
+                      return (
+                        <h4>{fret}</h4>
+                      );
+                    }).reverse()}
+                  </div>             
+                </div>
+                <div className="chord-info-block">
+                  <h2>Chord Names</h2>
+                  <ol className = "chord-info-list">{this.state.validChords.map((chord)=>{
                     return (
-                      <h3>{fret}</h3>
-                    );
-                  }).reverse()}
+                      <li>{chord}</li>
+                    )
+                  })}</ol>                
                 </div>
               </div>   
             </div>
@@ -80,24 +93,35 @@ class App extends React.Component {
       )
     }
 
-    getChordToneValues(fretState){      
+    getChordToneValues(fretState,tonesOnly=true){      
+      console.log(fretState);
       let tones = fretState.map((fretVal, i) => {
         if(typeof fretVal == 'number'){
           return NoteLookup.getToneForNoteName(this.state.stringTunings[i]) + fretVal
         }
+        else if(!tonesOnly){
+          return fretVal;
+        }
+
       }).filter((toneVal)=>{
         if(toneVal){
           return toneVal;
         }
       })
-
       return tones;
     }
 
     getNotesInChord(chordTones){
       let notes = [];
       for(let tone of chordTones){
-        notes.push(NoteLookup.getNoteName(tone,true));
+        if(tone !== 'x'){
+          notes.push(NoteLookup.getNoteName(tone,true));
+
+        }
+        else{
+          notes.push(tone);
+        }
+        
       }
       return notes;
     }
@@ -107,13 +131,14 @@ class App extends React.Component {
 
       for(let tone of chordTones){
         let intervalStructure = {};
-        intervalStructure.root = tone;
+        intervalStructure.root = NoteLookup.getNoteName(tone);
         intervalStructure.structure = [];
 
         for(let otherTone of chordTones){
-          intervalStructure.structure.push((tone-otherTone)%12);
-        }
 
+          intervalStructure.structure.push((((otherTone-tone)%12)+12)%12);
+        }
+        intervalStructure.structure = [...new Set(intervalStructure.structure)].sort();
         intervalStructures.push(intervalStructure);
       }
 
@@ -121,23 +146,26 @@ class App extends React.Component {
     }
 
     identifyChord(fretState){
-      console.log(fretState);
-
-      let tones = this.getChordToneValues(fretState);
-
-      console.log(tones);
-
+      let tonesV = this.getChordToneValues(fretState);
+      let tones = this.getChordToneValues(fretState,false);
       let notes = this.getNotesInChord(tones);
+      let intervalStructures = this.getIntervalStructures(tonesV);
 
-      let intervalStructures = this.getIntervalStructures(tones);
+      let validChords = [...
+        new Set(intervalStructures.filter(is => {return ChordLookup[is.structure]})
+          .map((is) => {
+          let chordClass = ChordLookup[is.structure];
+          return `${is.root} ${ChordLookup[is.structure]}`;
+      }))];
 
-      console.log(notes);
+      this.setState({
+        currentNotesPlayed : notes, 
+        currentTonesPlayed : tonesV, 
+        currentFretState : fretState,
+        validChords : validChords
+        });
 
-      console.log(intervalStructures);
-
-      this.setState({currentNotesPlayed : notes, currentTonesPlayed : tones, currentFretState : fretState});
-
-      let normalizedTones = [... new Set(tones.map((toneVal)=>{
+      let normalizedTones = [... new Set(tonesV.map((toneVal)=>{
         return (toneVal);
       }))].sort((a,b) => {
         return ((b*7)%12) - ((a*7)%12);

@@ -76,7 +76,6 @@ export class GuitarString extends React.Component{
     }
 
     shouldComponentUpdate(nextProps,nextState){
-        console.log(this.props.currentlySelectedFret !== nextProps.currentlySelectedFret);
         return this.props.currentlySelectedFret !== nextProps.currentlySelectedFret;
     }
 

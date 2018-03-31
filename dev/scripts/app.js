@@ -27,7 +27,8 @@ class App extends React.Component {
         currentTonesPlayed : [],
         currentNotesPlayed : ['x','x','x','x','x','x'],
         currentFretState : ['x','x','x','x','x','x'],
-        validChords : []
+        validChords : [],
+        play : false
       }
 
       this.state.keys = {};
@@ -43,18 +44,50 @@ class App extends React.Component {
       this.getChordToneValues = this.getChordToneValues.bind(this);
       this.getNotesInChord = this.getNotesInChord.bind(this);
       this.getIntervalStructures = this.getIntervalStructures.bind(this);
+      this.playChord = this.playChord.bind(this);
+    }
+
+    playChord(){
+      if(this.state.play){
+        this.setState({play : false});
+      }
+      else{
+        this.setState({play : true});
+      }
     }
 
     render() {
       return (
-        <div>
-          <h2>Chord Explorer</h2>
+        <div className = "wrapper">
+          <button 
+            onClick = {this.playChord} 
+            className="sound-button">{this.state.play 
+              ? 'Stop' 
+              : 'Play' }
+          </button>
+          <h1 className = "app-title">Chord Explorer</h1>
+          <h6 className = "credits">Created By: <a href="http://jfejtek.com">Jonathan Fejtek</a> </h6>
+          
+
           <div className="app-container"> 
             <div className="fretboard-container">
               <GuitarInput notify = {this.identifyChord} stringTunings = {this.state.stringTunings}/>
             </div>
             <div className="chord-info-container">
               <div className="keyspace-container">
+
+                <div className="chord-space-legend">
+                  <div className="l-space-color note-space-color">
+                  </div>
+                  <h4 className = "legend-label">Note-space</h4>
+                </div>
+
+                <div className="chord-space-legend">
+                  <div className="l-space-color key-space-color">
+                  </div>
+                  <h4 className = "legend-label">Key-space</h4>
+                </div>
+
                 <KeySpaceView parentKeys = {this.state.parentKeyTones} keyIndices = {this.state.keyIndices} />
               </div>
               <div className="chord-details">

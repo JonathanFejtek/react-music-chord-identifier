@@ -5,11 +5,15 @@ import {KeySpaceView} from './key-space-view';
 import {NoteLookup} from './note-lookup';
 import {ModeLookup} from './modes-and-keys';
 import {ChordLookup} from './chord-lookup';
+import {GuitarSynth} from './sound.js';
+
+
+let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 
 function satisfiesKey(chordTones,keyTones){
   for(let tone of chordTones){
-    if(!keyTones.includes(tone%12)){
+    if(!keyTones.includes(tone%12) && typeof tone === 'number'){
       return false;
     }
   }
@@ -24,7 +28,7 @@ class App extends React.Component {
         parentKeyTones : [],
         parentKeyNames : [],
         stringTunings : ["E 4","B 3","G 3","D 3","A 2","E 2"],
-        currentTonesPlayed : [],
+        currentTonesPlayed : ['x','x','x','x','x','x'],
         currentNotesPlayed : ['x','x','x','x','x','x'],
         currentFretState : ['x','x','x','x','x','x'],
         validChords : [],
@@ -32,7 +36,7 @@ class App extends React.Component {
       }
 
       this.state.keys = {};
-
+      this.guitarSynth = new GuitarSynth(audioCtx,6);
 
       let modeLookup = new ModeLookup();
 
@@ -50,10 +54,14 @@ class App extends React.Component {
     playChord(){
       if(this.state.play){
         this.setState({play : false});
+        this.guitarSynth.stop();
+
       }
       else{
         this.setState({play : true});
+        this.guitarSynth.play(this.state.currentTonesPlayed);
       }
+      
     }
 
     render() {
@@ -191,13 +199,6 @@ class App extends React.Component {
           return `${is.root} ${ChordLookup[is.structure]}`;
       }))];
 
-      this.setState({
-        currentNotesPlayed : notes, 
-        currentTonesPlayed : tonesV, 
-        currentFretState : fretState,
-        validChords : validChords
-        });
-
       let normalizedTones = [... new Set(tonesV.map((toneVal)=>{
         return (toneVal);
       }))].sort((a,b) => {
@@ -218,7 +219,20 @@ class App extends React.Component {
         return ((b*7)%12) - ((a*7)%12);
       }
       );
-      this.setState({keyIndices : normalizedTones, parentKeyTones : parentKeyRootTones, parentKeyNames : parentKeyNames});
+
+      this.setState({
+        keyIndices : normalizedTones, 
+        parentKeyTones : parentKeyRootTones, 
+        parentKeyNames : parentKeyNames,
+        currentNotesPlayed : notes, 
+        currentTonesPlayed : tonesV, 
+        currentFretState : fretState,
+        validChords : validChords
+      },()=>{
+        this.guitarSynth.set(this.state.currentTonesPlayed);
+      });
+
+      
     }
 
 

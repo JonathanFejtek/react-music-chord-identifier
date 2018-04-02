@@ -48,12 +48,10 @@ export class GuitarSynth{
     play(tab){
         let c = 0;
         for(let t of tab){
-            console.log(t);
             if(typeof t == 'number'){
                 this.oscillators[c].play(NoteLookup.getFrequencyForTone(t),this.context.currentTime+0.5);
             }
             else{
-                console.log('paly');
                 this.oscillators[c].play(null,this.context.currentTime+0.5);
             }
             c++;
@@ -72,7 +70,14 @@ export class GuitarSynth{
 
     stop(){        
         for(let osc of this.oscillators){
-            osc.stop(this.context.currentTime+1);
+            try{
+                osc.stop(this.context.currentTime+1);
+            }
+
+            catch(err){
+
+            }
+            
         }
     }
 }

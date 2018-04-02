@@ -46,7 +46,6 @@ export class KeySpaceView extends React.Component{
             )
             c++;
         }
-        console.log(points);
         return (
             <svg>
                 <polygon stroke = {'lightgrey'} fill = {'none'} points = {points}/>
@@ -99,7 +98,7 @@ export class KeySpaceView extends React.Component{
     
             return (
                 <svg>{circles}
-                <polygon class = "parent-keys" points = {coordinateString}/>
+                <polygon className = "parent-keys" points = {coordinateString}/>
                 </svg>
             )
         }        

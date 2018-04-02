@@ -67,17 +67,18 @@ class App extends React.Component {
     render() {
       return (
         <div className = "wrapper">
-          <button 
-            onClick = {this.playChord} 
-            className="sound-button">{this.state.play 
-              ? 'Stop' 
-              : 'Play' }
-          </button>
-          <h1 className = "app-title">Chord Explorer</h1>
+            <button 
+              onClick = {this.playChord} 
+              className="sound-button">{this.state.play 
+                ? 'Stop' 
+                : 'Play' }
+            </button>
+            <h1 className = "app-title">Guitar Explorer</h1>          
           <h6 className = "credits">Created By: <a href="http://jfejtek.com">Jonathan Fejtek</a> </h6>
-          
+
 
           <div className="app-container"> 
+
             <div className="fretboard-container">
               <GuitarInput notify = {this.identifyChord} stringTunings = {this.state.stringTunings}/>
             </div>
@@ -102,9 +103,9 @@ class App extends React.Component {
                 <div className="chord-info-block">
                   <h2>Notes in Chord</h2>
                   <div className="chord-info-list">
-                    {this.state.currentNotesPlayed.map((note)=>{
+                    {this.state.currentNotesPlayed.map((note,i)=>{
                       return (
-                        <h4>{note}</h4>
+                        <h4 key = {i}>{note}</h4>
                       );
                     }).reverse()}
                   </div>              
@@ -112,16 +113,16 @@ class App extends React.Component {
                 <div className="chord-info-block">
                   <h2>Tab</h2>
                   <div className="chord-info-list">
-                    {this.state.currentFretState.map((fret)=>{
+                    {this.state.currentFretState.map((fret,i)=>{
                       return (
-                        <h4>{fret}</h4>
+                        <h4 key = {i}>{fret}</h4>
                       );
                     }).reverse()}
                   </div>             
                 </div>
                 <div className="chord-info-block">
                   <h2>Chord Names</h2>
-                  <ol className = "chord-info-list">{this.state.validChords.map((chord)=>{
+                  <ol className = "chord-info-list chord-list">{this.state.validChords.map((chord)=>{
                     return (
                       <li>{chord}</li>
                     )
@@ -135,7 +136,6 @@ class App extends React.Component {
     }
 
     getChordToneValues(fretState,tonesOnly=true){      
-      console.log(fretState);
       let tones = fretState.map((fretVal, i) => {
         if(typeof fretVal == 'number'){
           return NoteLookup.getToneForNoteName(this.state.stringTunings[i]) + fretVal
@@ -187,17 +187,18 @@ class App extends React.Component {
     }
 
     identifyChord(fretState){
+      
       let tonesV = this.getChordToneValues(fretState);
       let tones = this.getChordToneValues(fretState,false);
       let notes = this.getNotesInChord(tones);
       let intervalStructures = this.getIntervalStructures(tonesV);
 
+      
       let validChords = [...
-        new Set(intervalStructures.filter(is => {return ChordLookup[is.structure]})
-          .map((is) => {
-          let chordClass = ChordLookup[is.structure];
-          return `${is.root} ${ChordLookup[is.structure]}`;
-      }))];
+        new Set(
+          intervalStructures.filter(
+            is => {return ChordLookup[is.structure]})
+              .map((is) => {return `${is.root} ${ChordLookup[is.structure]}`;}))];
 
       let normalizedTones = [... new Set(tonesV.map((toneVal)=>{
         return (toneVal);

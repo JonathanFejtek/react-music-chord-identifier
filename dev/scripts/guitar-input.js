@@ -18,7 +18,6 @@ export class GuitarInput extends React.Component{
         return (
             <div className = "guitar-input-container">
                 <div className="tab-input-container">
-                    {/* {this.renderTabInput()}             */}
                 </div>
                 <div className = "guitar-container">
                     {this.renderStrings()}
@@ -61,10 +60,6 @@ export class GuitarInput extends React.Component{
             this.props.notify(this.state.strings);
         });     
     }
-
-
-
-
 }
 
 export class GuitarString extends React.Component{
@@ -142,7 +137,7 @@ export class GuitarString extends React.Component{
         }
 
         else{
-            this.props.setCurrentlySelectedFret(this.props.stringId, null);
+            this.props.setCurrentlySelectedFret(this.props.stringId, 'x');
         }
     }
 
